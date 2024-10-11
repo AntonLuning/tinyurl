@@ -27,20 +27,21 @@ func NewJSONAPIServer(addr string, service service.Service) *JSONAPIServer {
 }
 
 func (s *JSONAPIServer) Run() error {
-	http.Handle("/api/v1/", http.StripPrefix("/api/v1", s.v1Mux()))
+	mux := http.NewServeMux()
+	mux.Handle("/api/v1/", http.StripPrefix("/api/v1", s.v1Mux()))
 
 	slog.Info("JSON API server starting", "address", s.addr)
 
-	return http.ListenAndServe(s.addr, nil)
+	return http.ListenAndServe(s.addr, mux)
 }
 
 func (s *JSONAPIServer) v1Mux() http.Handler {
-	mux := http.NewServeMux()
+	v1Mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /url", makeHTTPHandlerFunc(s.handleCreateShortenURL))
-	mux.HandleFunc("GET /url", makeHTTPHandlerFunc(s.handleGetShortenURL))
+	v1Mux.HandleFunc("POST /url", makeHTTPHandlerFunc(s.handleCreateShortenURL))
+	v1Mux.HandleFunc("GET /url", makeHTTPHandlerFunc(s.handleGetShortenURL))
 
-	return mux
+	return v1Mux
 }
 
 func (s *JSONAPIServer) handleCreateShortenURL(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
