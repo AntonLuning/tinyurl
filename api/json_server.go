@@ -70,7 +70,12 @@ func (s *JSONAPIServer) handleGetShortenURL(ctx context.Context, w http.Response
 
 	originalURL, err := s.service.GetOriginalURL(ctx, shortenURL)
 	if err != nil {
-		return err
+		switch e := err.(type) {
+		case *service.ShortenNotExistError:
+			return NewNotFoundError("shorten url", e.Value)
+		default:
+			return err
+		}
 	}
 
 	resp := models.GetOriginalURLResponse{
@@ -89,6 +94,8 @@ func makeHTTPHandlerFunc(apiFn apiFunc) http.HandlerFunc {
 			switch e := err.(type) {
 			case *ValidationError:
 				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "bad request", "message": e})
+			case *NotFoundError:
+				writeJSON(w, http.StatusNotFound, map[string]any{"error": "not found", "message": e})
 			default:
 				writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "internal server error"})
 			}

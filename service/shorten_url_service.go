@@ -36,7 +36,7 @@ func (s *ShortenURLService) GetOriginalURL(ctx context.Context, shortenURL strin
 	defer s.lock.Unlock()
 	originalURL, ok := s.urls[shortenURL]
 	if !ok {
-		return nil, fmt.Errorf("shorten URL not found")
+		return nil, NewShortenNotExistError(shortenURL)
 	}
 
 	return &originalURL, nil
