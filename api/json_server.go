@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -47,7 +46,7 @@ func (s *JSONAPIServer) v1Mux() http.Handler {
 func (s *JSONAPIServer) handleCreateShortenURL(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	originalURL := r.URL.Query().Get("original")
 	if originalURL == "" {
-		return fmt.Errorf("query param \"original\" must not be empty")
+		return NewValidationError("original", "query param missing")
 	}
 
 	shortenURL, err := s.service.CreateShortenURL(ctx, originalURL)
@@ -66,7 +65,7 @@ func (s *JSONAPIServer) handleCreateShortenURL(ctx context.Context, w http.Respo
 func (s *JSONAPIServer) handleGetShortenURL(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	shortenURL := r.URL.Query().Get("shorten")
 	if shortenURL == "" {
-		return fmt.Errorf("query param \"shorten\" must not be empty")
+		return NewValidationError("shorten", "query param missing")
 	}
 
 	originalURL, err := s.service.GetOriginalURL(ctx, shortenURL)
@@ -85,9 +84,14 @@ func (s *JSONAPIServer) handleGetShortenURL(ctx context.Context, w http.Response
 func makeHTTPHandlerFunc(apiFn apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := utils.SetContextValues(context.Background(), "JSON")
+
 		if err := apiFn(ctx, w, r); err != nil {
-			// TODO: handle errors more dynamically (custom error type)
-			_ = writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+			switch e := err.(type) {
+			case *ValidationError:
+				writeJSON(w, http.StatusBadRequest, map[string]any{"error": "bad request", "message": e})
+			default:
+				writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "internal server error"})
+			}
 		}
 	}
 }
