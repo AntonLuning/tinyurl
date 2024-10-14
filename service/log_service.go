@@ -58,10 +58,10 @@ func logRequest(ctx context.Context, message string, defaultMsg slog.Attr, respM
 	}
 
 	slog.LogAttrs(context.Background(), level, message, []slog.Attr{
-		slog.Any("requestID", ctx.Value(utils.REQUEST_ID_KEY)),
-		slog.Any("server", ctx.Value(utils.REQUEST_SERVER_TYPE_KEY)),
 		defaultMsg,
-		slog.Any("duration", time.Since(startTime)),
 		respMsg,
+		slog.Any("server", ctx.Value(utils.REQUEST_SERVER_TYPE_KEY)),
+		slog.Any("requestID", ctx.Value(utils.REQUEST_ID_KEY)),
+		slog.Any("duration", time.Since(startTime)),
 	}...)
 }
