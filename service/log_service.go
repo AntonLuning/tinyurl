@@ -8,34 +8,32 @@ import (
 	"github.com/AntonLuning/tiny-url/utils"
 )
 
+type ServerType string
+
+const (
+	ServerGRPC ServerType = "gRPC"
+	ServerJSON ServerType = "JSON"
+)
+
 type LogService struct {
-	next Service
+	next       Service
+	serverType ServerType
 }
 
-func NewLogService(next Service) Service {
+func NewLogService(next Service, serverType ServerType) Service {
 	return &LogService{
-		next: next,
+		next:       next,
+		serverType: serverType,
 	}
 }
 
 func (s *LogService) CreateShortenURL(ctx context.Context, originalURL string) (shortenURL *string, err error) {
 	defer func(start time.Time) {
-		logLevel := slog.LevelInfo
-		logMessage := "Created new shorten URL"
-		logAttrs := []slog.Attr{
-			slog.Any("requestID", ctx.Value(utils.REQUEST_ID_KEY)),
-			slog.String("original", originalURL),
-			slog.Any("duration", time.Since(start)),
-		}
 		if err != nil {
-			logLevel = slog.LevelError
-			logMessage = "Unable to create shorten URL"
-			logAttrs = append(logAttrs, slog.String("error", err.Error()))
+			logRequest(ctx, "Unable to create shorten URL", slog.String("original", originalURL), slog.String("error", err.Error()), start)
 		} else {
-			logAttrs = append(logAttrs, slog.String("shorten", *shortenURL))
+			logRequest(ctx, "Created new shorten URL", slog.String("original", originalURL), slog.String("shorten", *shortenURL), start)
 		}
-
-		slog.LogAttrs(context.Background(), logLevel, logMessage, logAttrs...)
 	}(time.Now())
 
 	return s.next.CreateShortenURL(ctx, originalURL)
@@ -43,23 +41,27 @@ func (s *LogService) CreateShortenURL(ctx context.Context, originalURL string) (
 
 func (s *LogService) GetOriginalURL(ctx context.Context, shortenURL string) (originalURL *string, err error) {
 	defer func(start time.Time) {
-		logLevel := slog.LevelInfo
-		logMessage := "Fetched original URL"
-		logAttrs := []slog.Attr{
-			slog.Any("requestID", ctx.Value(utils.REQUEST_ID_KEY)),
-			slog.String("shorten", shortenURL),
-			slog.Any("duration", time.Since(start)),
-		}
 		if err != nil {
-			logLevel = slog.LevelError
-			logMessage = "Unable to fetch original URL"
-			logAttrs = append(logAttrs, slog.String("error", err.Error()))
+			logRequest(ctx, "Unable to fetch original URL", slog.String("shorten", shortenURL), slog.String("error", err.Error()), start)
 		} else {
-			logAttrs = append(logAttrs, slog.String("original", *originalURL))
+			logRequest(ctx, "Fetched original URL", slog.String("shorten", shortenURL), slog.String("original", *originalURL), start)
 		}
-
-		slog.LogAttrs(context.Background(), logLevel, logMessage, logAttrs...)
 	}(time.Now())
 
 	return s.next.GetOriginalURL(ctx, shortenURL)
+}
+
+func logRequest(ctx context.Context, message string, defaultMsg slog.Attr, respMsg slog.Attr, startTime time.Time) {
+	level := slog.LevelInfo
+	if respMsg.Key == "error" {
+		level = slog.LevelError
+	}
+
+	slog.LogAttrs(context.Background(), level, message, []slog.Attr{
+		slog.Any("requestID", ctx.Value(utils.REQUEST_ID_KEY)),
+		slog.Any("server", ctx.Value(utils.REQUEST_SERVER_TYPE_KEY)),
+		defaultMsg,
+		slog.Any("duration", time.Since(startTime)),
+		respMsg,
+	}...)
 }

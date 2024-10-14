@@ -1,18 +1,20 @@
-package json
+package grpc
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/AntonLuning/tiny-url/api"
+	"github.com/AntonLuning/tiny-url/proto"
 	"github.com/AntonLuning/tiny-url/service"
 )
 
 const (
 	DOMAIN = "localhost"
-	PORT   = 9999
+	PORT   = 9988
 )
 
 func TestMain(m *testing.M) {
@@ -26,10 +28,10 @@ func TestMain(m *testing.M) {
 func setupTestServer() {
 	urlService := service.NewShortenURLService("testing.com")
 
-	jsonServer := api.NewJSONAPIServer(fmt.Sprintf(":%d", PORT), urlService)
+	grpcServer := api.NewGRPCAPIServer(fmt.Sprintf("%s:%d", DOMAIN, PORT), urlService)
 
 	go func() {
-		if err := jsonServer.Run(); err != nil {
+		if err := grpcServer.Run(); err != nil {
 			panic(err)
 		}
 	}()
@@ -37,25 +39,31 @@ func setupTestServer() {
 }
 
 func TestCreateShortenURL(t *testing.T) {
-	client := New(fmt.Sprintf("%s:%d", DOMAIN, PORT))
+	client, err := New(fmt.Sprintf("%s:%d", DOMAIN, PORT))
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	_, err := createShortenURL(client, "example.com/my/test/url")
+	_, err = createShortenURL(*client, "example.com/my/test/url")
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestGetOriginalURL(t *testing.T) {
-	client := New(fmt.Sprintf("%s:%d", DOMAIN, PORT))
-
-	exampleURL := "example.com/my/test/url"
-
-	shortenURL, err := createShortenURL(client, exampleURL)
+	client, err := New(fmt.Sprintf("%s:%d", DOMAIN, PORT))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	originalURL, err := getOriginalURL(client, *shortenURL)
+	exampleURL := "example.com/my/test/url"
+
+	shortenURL, err := createShortenURL(*client, exampleURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	originalURL, err := getOriginalURL(*client, *shortenURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,8 +73,8 @@ func TestGetOriginalURL(t *testing.T) {
 	}
 }
 
-func createShortenURL(client *Client, originalURL string) (*string, error) {
-	resp, err := client.CreateShortenURL(originalURL)
+func createShortenURL(client proto.ServiceClient, originalURL string) (*string, error) {
+	resp, err := client.CreateShortenURL(context.Background(), &proto.ShortenURLRequest{Original: originalURL})
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +86,8 @@ func createShortenURL(client *Client, originalURL string) (*string, error) {
 	return &resp.Shorten, nil
 }
 
-func getOriginalURL(client *Client, shortenURL string) (*string, error) {
-	resp, err := client.GetOriginalURL(shortenURL)
+func getOriginalURL(client proto.ServiceClient, shortenURL string) (*string, error) {
+	resp, err := client.GetOriginalURL(context.Background(), &proto.OriginalURLRequest{Shorten: shortenURL})
 	if err != nil {
 		return nil, err
 	}

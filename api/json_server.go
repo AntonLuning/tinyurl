@@ -83,9 +83,8 @@ func (s *JSONAPIServer) handleGetShortenURL(ctx context.Context, w http.Response
 }
 
 func makeHTTPHandlerFunc(apiFn apiFunc) http.HandlerFunc {
-	ctx := context.WithValue(context.Background(), utils.REQUEST_ID_KEY, 1)
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := utils.SetContextValues(context.Background(), "JSON")
 		if err := apiFn(ctx, w, r); err != nil {
 			// TODO: handle errors more dynamically (custom error type)
 			_ = writeJSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})

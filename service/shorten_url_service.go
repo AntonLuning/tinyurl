@@ -22,7 +22,7 @@ func NewShortenURLService(domainName string) Service {
 }
 
 func (s *ShortenURLService) CreateShortenURL(_ context.Context, originalURL string) (*string, error) {
-	shortenURL := fmt.Sprintf("%s/%s", s.domainName, utils.GenerateRandomAlphaNumercString(8))
+	shortenURL := fmt.Sprintf("%s/%s", s.domainName, utils.GenerateRandomAlphaNumercString(16))
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
