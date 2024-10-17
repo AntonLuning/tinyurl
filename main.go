@@ -9,7 +9,7 @@ import (
 
 func main() {
 	urlService := service.NewShortenURLService("testing.com")
-	urlService = service.NewMetricsService(urlService) // Service wrapped in metrics
+	urlService = service.NewMetricsService(urlService, ":8999") // Service wrapped in metrics
 
 	grpcServer := api.NewGRPCAPIServer("localhost:9988", service.NewLogService(urlService, service.ServerGRPC)) // TODO: address hard coded
 	go func() {

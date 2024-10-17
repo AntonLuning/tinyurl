@@ -45,13 +45,15 @@ func (s *JSONAPIServer) v1Mux() http.Handler {
 
 func (s *JSONAPIServer) handleCreateShortenURL(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	originalURL := r.URL.Query().Get("original")
-	if originalURL == "" {
-		return NewValidationError("original", "query param missing")
-	}
 
 	shortenURL, err := s.service.CreateShortenURL(ctx, originalURL)
 	if err != nil {
-		return err
+		switch e := err.(type) {
+		case *service.EmptyInputError:
+			return NewValidationError(e.Value, "query param missing")
+		default:
+			return err
+		}
 	}
 
 	resp := models.CreateShortenURLResponse{
@@ -64,13 +66,12 @@ func (s *JSONAPIServer) handleCreateShortenURL(ctx context.Context, w http.Respo
 
 func (s *JSONAPIServer) handleGetShortenURL(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	shortenURL := r.URL.Query().Get("shorten")
-	if shortenURL == "" {
-		return NewValidationError("shorten", "query param missing")
-	}
 
 	originalURL, err := s.service.GetOriginalURL(ctx, shortenURL)
 	if err != nil {
 		switch e := err.(type) {
+		case *service.EmptyInputError:
+			return NewValidationError(e.Value, "query param missing")
 		case *service.ShortenNotExistError:
 			return NewNotFoundError("shorten url", e.Value)
 		default:
@@ -89,6 +90,8 @@ func (s *JSONAPIServer) handleGetShortenURL(ctx context.Context, w http.Response
 func makeHTTPHandlerFunc(apiFn apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := utils.SetContextValues(context.Background(), "JSON")
+
+		slog.Info("Incoming request", "server", "JSON", "method", r.Method, "path", r.URL.Path, "requestID", ctx.Value(utils.REQUEST_ID_KEY))
 
 		if err := apiFn(ctx, w, r); err != nil {
 			switch e := err.(type) {

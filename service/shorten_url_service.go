@@ -22,6 +22,10 @@ func NewShortenURLService(domainName string) Service {
 }
 
 func (s *ShortenURLService) CreateShortenURL(_ context.Context, originalURL string) (*string, error) {
+	if originalURL == "" {
+		return nil, NewEmptyInputError("original")
+	}
+
 	shortenURL := fmt.Sprintf("%s/%s", s.domainName, utils.GenerateRandomAlphaNumercString(16))
 
 	s.lock.Lock()
@@ -31,7 +35,11 @@ func (s *ShortenURLService) CreateShortenURL(_ context.Context, originalURL stri
 	return &shortenURL, nil
 }
 
-func (s *ShortenURLService) GetOriginalURL(ctx context.Context, shortenURL string) (*string, error) {
+func (s *ShortenURLService) GetOriginalURL(_ context.Context, shortenURL string) (*string, error) {
+	if shortenURL == "" {
+		return nil, NewEmptyInputError("shorten")
+	}
+
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	originalURL, ok := s.urls[shortenURL]
