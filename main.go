@@ -1,25 +1,45 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/AntonLuning/tiny-url/api"
+	"github.com/AntonLuning/tiny-url/config"
 	"github.com/AntonLuning/tiny-url/service"
 )
 
 func main() {
-	urlService := service.NewShortenURLService("testing.com")
-	urlService = service.NewMetricsService(urlService, ":8999") // Service wrapped in metrics
+	cfg := config.Config()
 
-	grpcServer := api.NewGRPCAPIServer("localhost:9988", service.NewLogService(urlService, service.ServerGRPC)) // TODO: address hard coded
-	go func() {
-		if err := grpcServer.Run(); err != nil {
-			slog.Error("Unable to run gRPC API server", "error", err.Error())
-		}
-	}()
-
-	jsonServer := api.NewJSONAPIServer(":9999", service.NewLogService(urlService, service.ServerJSON)) // TODO: address hard coded
-	if err := jsonServer.Run(); err != nil {
-		slog.Error("Unable to run JSON API server", "error", err.Error())
+	urlService := service.NewShortenURLService(cfg.DomainName)
+	if cfg.InludeMetrics {
+		urlService = service.NewMetricsService(urlService, fmt.Sprintf(":%d", cfg.PortMetrics)) // Service wrapped in metrics
 	}
+
+	if cfg.WithGRPCAPI {
+		grpcServer := api.NewGRPCAPIServer(
+			fmt.Sprintf("%s:%d", strings.TrimSpace(cfg.AddressGRPC), cfg.PortGRPC),
+			service.NewLogService(urlService, service.ServerGRPC))
+		go func() {
+			if err := grpcServer.Run(); err != nil {
+				slog.Error("Unable to run gRPC API server", "error", err.Error())
+			}
+		}()
+	}
+
+	if cfg.WithJSONAPI {
+		jsonServer := api.NewJSONAPIServer(
+			fmt.Sprintf("%s:%d", strings.TrimSpace(cfg.AddressJSON), cfg.PortJSON),
+			service.NewLogService(urlService, service.ServerJSON))
+		go func() {
+			if err := jsonServer.Run(); err != nil {
+				slog.Error("Unable to run JSON API server", "error", err.Error())
+			}
+
+		}()
+	}
+
+	select {}
 }
