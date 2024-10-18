@@ -1,0 +1,29 @@
+version: "3.8"
+name: tinyurl
+
+services:
+  tinyurl:
+    container_name: tinyurl
+    image: tinyurl:dev
+    env_file:
+      - ./.env
+    networks:
+      app_net:
+        ipv4_address: 10.0.55.2
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      app_net:
+        ipv4_address: 10.0.55.3
+
+networks:
+  app_net:
+    name: app_net
+    ipam:
+      config:
+        - subnet: 10.0.55.0/24
+          gateway: 10.0.55.1
