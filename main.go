@@ -19,15 +19,14 @@ func main() {
 		panic(fmt.Sprintf("could not initialize storage with error: %s", err.Error()))
 	}
 
-	urlService := service.NewShortenURLService(cfg.DomainName, "/tiny", storage) // TODO: handle base path
+	urlService := service.NewShortenURLService(cfg.DomainName, cfg.BasePath, storage)
 	if cfg.InludeMetrics {
 		urlService = service.NewMetricsService(urlService, fmt.Sprintf(":%d", cfg.PortMetrics)) // Service wrapped in metrics
 	}
 
 	if cfg.WithGRPCAPI {
-		grpcServer := api.NewGRPCAPIServer(
-			fmt.Sprintf("%s:%d", cfg.AddressGRPC, cfg.PortGRPC),
-			service.NewLogService(urlService, service.ServerGRPC)) // Service wrapped in logging
+		grpcAddr := fmt.Sprintf("%s:%d", cfg.AddressGRPC, cfg.PortGRPC)
+		grpcServer := api.NewGRPCAPIServer(grpcAddr, service.NewLogService(urlService, service.ServerGRPC)) // Service wrapped in logging
 		go func() {
 			if err := grpcServer.Run(); err != nil {
 				slog.Error("Unable to run gRPC API server", "error", err.Error())
@@ -35,17 +34,9 @@ func main() {
 		}()
 	}
 
-	if cfg.WithJSONAPI {
-		jsonServer := api.NewJSONAPIServer(
-			fmt.Sprintf("%s:%d", cfg.AddressJSON, cfg.PortJSON),
-			service.NewLogService(urlService, service.ServerJSON)) // Service wrapped in logging
-		go func() {
-			if err := jsonServer.Run(); err != nil {
-				slog.Error("Unable to run JSON API server", "error", err.Error())
-			}
-
-		}()
+	httpAddr := fmt.Sprintf(":%d", cfg.Port)
+	jsonServer := api.NewHTTPServer(httpAddr, service.NewLogService(urlService, service.ServerJSON), cfg.WithJSONAPI) // Service wrapped in logging
+	if err := jsonServer.Run(cfg.BasePath); err != nil {
+		slog.Error("Unable to run HTTP server", "error", err.Error())
 	}
-
-	select {}
 }

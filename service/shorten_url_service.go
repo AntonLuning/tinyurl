@@ -2,7 +2,8 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"net/url"
+	"path"
 
 	"github.com/AntonLuning/tiny-url/storage"
 	"github.com/AntonLuning/tiny-url/utils"
@@ -27,10 +28,14 @@ func (s *ShortenURLService) CreateShortenURL(ctx context.Context, originalURL st
 		return nil, NewEmptyInputError("original")
 	}
 
-	shortenURL := fmt.Sprintf("%s/%s/%s", s.domainName, s.basePath, utils.GenerateRandomAlphaNumercString(16))
+	shortenID := utils.GenerateRandomAlphaNumercString(16)
+	if err := s.storage.SaveURL(ctx, originalURL, shortenID); err != nil {
+		return nil, err
+	}
 
-	if err := s.storage.SaveURL(ctx, originalURL, shortenURL); err != nil {
-		return nil, err // TODO: custom error
+	shortenURL, err := url.JoinPath(s.domainName, s.basePath, shortenID)
+	if err != nil {
+		return nil, err
 	}
 
 	return &shortenURL, nil
@@ -41,10 +46,17 @@ func (s *ShortenURLService) GetOriginalURL(ctx context.Context, shortenURL strin
 		return nil, NewEmptyInputError("shorten")
 	}
 
-	originalURL, err := s.storage.FetchURL(ctx, shortenURL)
+	parsedURL, err := url.Parse(shortenURL)
 	if err != nil {
-		return nil, err // TODO: custom error
-		// return nil, NewShortenNotExistError(shortenURL)
+		return nil, err
+	}
+
+	originalURL, err := s.storage.FetchURL(ctx, path.Base(parsedURL.Path))
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, NewShortenNotExistError(shortenURL)
+		}
+		return nil, err
 	}
 
 	return &originalURL, nil

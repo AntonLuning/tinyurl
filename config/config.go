@@ -11,15 +11,14 @@ var (
 //go:generate go run github.com/g4s8/envdoc@latest --output ../ENVIRONMENT.md
 type AppConfig struct {
 	// Application domain name
-	DomainName string `env:"DOMAIN_NAME" envDefault:"localhost"`
+	DomainName string `env:"DOMAIN_NAME" envDefault:"test.com"`
+	// Shorten URL base path
+	BasePath string `env:"BASE_PATH" envDefault:"/tiny"`
+	// HTTP listen port
+	Port uint16 `env:"PORT" envDefault:"6788"`
 
 	// Run the application with a JSON REST API
 	WithJSONAPI bool `env:"JSON_API" envDefault:"true"`
-	// JSON API address (excluding port)
-	AddressJSON string `env:"ADDRESS_JSON_API" envDefault:"0.0.0.0"`
-	// JSON API listen port
-	PortJSON uint16 `env:"PORT_JSON_API" envDefault:"6788"`
-
 	// Run the application with a gRPC API
 	WithGRPCAPI bool `env:"GRPC_API" envDefault:"true"`
 	// gRPC API address (excluding port)

@@ -37,10 +37,10 @@ func setupTestServer() {
 
 	urlService := service.NewShortenURLService("testing.com", "/tiny", storage)
 
-	jsonServer := api.NewJSONAPIServer(fmt.Sprintf(":%d", PORT), urlService)
+	jsonServer := api.NewHTTPServer(fmt.Sprintf(":%d", PORT), urlService, true)
 
 	go func() {
-		if err := jsonServer.Run(); err != nil {
+		if err := jsonServer.Run("/tiny"); err != nil {
 			panic(err)
 		}
 	}()

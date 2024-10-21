@@ -10,17 +10,17 @@ import (
 )
 
 const createURL = `-- name: CreateURL :exec
-INSERT INTO url (original, shorten)
+INSERT INTO url (original, shorten_id)
 VALUES (?, ?)
 `
 
 type CreateURLParams struct {
-	Original string
-	Shorten  string
+	Original  string
+	ShortenID string
 }
 
 func (q *Queries) CreateURL(ctx context.Context, arg CreateURLParams) error {
-	_, err := q.db.ExecContext(ctx, createURL, arg.Original, arg.Shorten)
+	_, err := q.db.ExecContext(ctx, createURL, arg.Original, arg.ShortenID)
 	return err
 }
 
@@ -28,11 +28,11 @@ const getOriginalURL = `-- name: GetOriginalURL :one
 SELECT 
     original
 FROM url
-WHERE shorten = ? LIMIT 1
+WHERE shorten_id = ? LIMIT 1
 `
 
-func (q *Queries) GetOriginalURL(ctx context.Context, shorten string) (string, error) {
-	row := q.db.QueryRowContext(ctx, getOriginalURL, shorten)
+func (q *Queries) GetOriginalURL(ctx context.Context, shortenID string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getOriginalURL, shortenID)
 	var original string
 	err := row.Scan(&original)
 	return original, err

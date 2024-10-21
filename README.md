@@ -13,7 +13,6 @@ Absolutely nothing. It is only created for my own learning purposes.
 
 ---
 # How to run
-
 `examples/run-with-deps` contains a full example of how to deploy this app. It utilizes Docker compose to set up the environment and run the app. Start it by running:
     ```bash
     make -C examples/run-with-deps/
@@ -23,13 +22,14 @@ Absolutely nothing. It is only created for my own learning purposes.
 
 ---
 # Development
-
 You can run the app locally:
     ```bash
     make
     ```
 
 > To change its configuration, see the environment variables [file](./ENVIRONMENT.md)
+
+Usage of the returning tiny URL will not work unless the `DOMAIN_NAME` directs traffic to the application. To test it without the proper domain setup, take the tiny URL path and append it to your locale address to the application (e.g., `localhost:6788/tiny/GmggKEFi3ZaDkam`).
 
 ### Generating gRPC protobufs
 Install the required dependencies:
@@ -57,5 +57,4 @@ After editing the sqlc file(s) (schema.sql or queries.sql), run:
 
 ---
 # TODO
-- Make usage of the shorten urls work (http server that listens on the base path)
 - Better (more) tests - "not happy path" with CI pipeline (GitHub actions)

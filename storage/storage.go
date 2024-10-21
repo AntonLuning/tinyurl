@@ -33,15 +33,15 @@ func Init(ctx context.Context, path string) (*Storage, error) {
 	return &storage, nil
 }
 
-func (s *Storage) SaveURL(ctx context.Context, orignal string, shorten string) error {
+func (s *Storage) SaveURL(ctx context.Context, orignal string, shortenID string) error {
 	args := sqlc.CreateURLParams{
-		Original: orignal,
-		Shorten:  shorten,
+		Original:  orignal,
+		ShortenID: shortenID,
 	}
 
 	return s.db.CreateURL(ctx, args)
 }
 
-func (s *Storage) FetchURL(ctx context.Context, shorten string) (string, error) {
-	return s.db.GetOriginalURL(ctx, shorten)
+func (s *Storage) FetchURL(ctx context.Context, shortenID string) (string, error) {
+	return s.db.GetOriginalURL(ctx, shortenID)
 }

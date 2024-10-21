@@ -5,7 +5,7 @@
 package sqlc
 
 type Url struct {
-	ID       int64
-	Original string
-	Shorten  string
+	ID        int64
+	Original  string
+	ShortenID string
 }

@@ -4,7 +4,7 @@ name: tinyurl
 services:
   tinyurl:
     container_name: tinyurl
-    image: tinyurl:dev
+    image: tinyurl:example
     env_file:
       - ./.env
     networks:
