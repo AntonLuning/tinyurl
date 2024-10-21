@@ -14,18 +14,18 @@ Absolutely nothing. It is only created for my own learning purposes.
 ---
 # How to run
 `examples/run-with-deps` contains a full example of how to deploy this app. It utilizes Docker compose to set up the environment and run the app. Start it by running:
-    ```bash
-    make -C examples/run-with-deps/
-    ```
+```bash
+make -C examples/run-with-deps/
+```
 
 > For this to work, you will need Docker compose installed. `apt-get install docker-compose-plugin`
 
 ---
 # Development
 You can run the app locally:
-    ```bash
-    make
-    ```
+```bash
+make
+```
 
 > To change its configuration, see the environment variables [file](./ENVIRONMENT.md)
 
@@ -33,27 +33,27 @@ Usage of the returning tiny URL will not work unless the `DOMAIN_NAME` directs t
 
 ### Generating gRPC protobufs
 Install the required dependencies:
-    ```bash
-    apt-get install protobuf-compiler
-    go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-    ```
+```bash
+apt-get install protobuf-compiler
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+```
 
 After editing the .proto file(s), run:
-    ```bash
-    make proto
-    ```
+```bash
+make proto
+```
 
 ### Edit the database schema/queries
 Install `sqlc`:
-    ```bash
-    sudo curl -L -o /usr/local/bin/sqlc.tar.gz 'https://github.com/sqlc-dev/sqlc/releases/download/v1.26.0/sqlc_1.26.0_linux_amd64.tar.gz' && sudo tar -xf /usr/local/bin/sqlc.tar.gz -C /usr/local/bin && sudo rm /usr/local/bin/sqlc.tar.gz && sudo chown root.root /usr/local/bin/sqlc
-    ```
+```bash
+sudo curl -L -o /usr/local/bin/sqlc.tar.gz 'https://github.com/sqlc-dev/sqlc/releases/download/v1.26.0/sqlc_1.26.0_linux_amd64.tar.gz' && sudo tar -xf /usr/local/bin/sqlc.tar.gz -C /usr/local/bin && sudo rm /usr/local/bin/sqlc.tar.gz && sudo chown root.root /usr/local/bin/sqlc
+```
 
 After editing the sqlc file(s) (schema.sql or queries.sql), run:
-    ```bash
-    make sqlc
-    ```
+```bash
+make sqlc
+```
 
 ---
 # TODO
