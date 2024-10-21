@@ -58,3 +58,4 @@ make sqlc
 
 # TODO
 - Better (more) tests - "not happy path" with CI pipeline (GitHub actions)
+- Proper documentation
