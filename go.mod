@@ -5,6 +5,7 @@ go 1.22.2
 require (
 	github.com/caarlos0/env/v11 v11.2.2
 	github.com/google/uuid v1.6.0
+	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/prometheus/client_golang v1.20.5
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.35.1

@@ -24,14 +24,38 @@ Absolutely nothing. It is only created for my own learning purposes.
 ---
 # Development
 
-### Install local dependencies
-```bash
-apt-get install protobuf-compiler
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-```
+You can run the app locally:
+    ```bash
+    make
+    ```
+
+> To change its configuration, see the environment variables [file](./ENVIRONMENT.md)
+
+### Generating gRPC protobufs
+Install the required dependencies:
+    ```bash
+    apt-get install protobuf-compiler
+    go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+    ```
+
+After editing the .proto file(s), run:
+    ```bash
+    make proto
+    ```
+
+### Edit the database schema/queries
+Install `sqlc`:
+    ```bash
+    sudo curl -L -o /usr/local/bin/sqlc.tar.gz 'https://github.com/sqlc-dev/sqlc/releases/download/v1.26.0/sqlc_1.26.0_linux_amd64.tar.gz' && sudo tar -xf /usr/local/bin/sqlc.tar.gz -C /usr/local/bin && sudo rm /usr/local/bin/sqlc.tar.gz && sudo chown root.root /usr/local/bin/sqlc
+    ```
+
+After editing the sqlc file(s) (schema.sql or queries.sql), run:
+    ```bash
+    make sqlc
+    ```
 
 ---
 # TODO
-- Persistent storage (sqlite?)
+- Make usage of the shorten urls work (http server that listens on the base path)
 - Better (more) tests - "not happy path" with CI pipeline (GitHub actions)

@@ -10,11 +10,13 @@ import (
 	"github.com/AntonLuning/tiny-url/api"
 	"github.com/AntonLuning/tiny-url/proto"
 	"github.com/AntonLuning/tiny-url/service"
+	"github.com/AntonLuning/tiny-url/storage"
 )
 
 const (
-	DOMAIN = "localhost"
-	PORT   = 9988
+	DOMAIN  = "localhost"
+	PORT    = 9988
+	TEST_DB = "./test.db"
 )
 
 func TestMain(m *testing.M) {
@@ -22,11 +24,19 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 
+	os.Remove(TEST_DB)
 	os.Exit(code)
 }
 
 func setupTestServer() {
-	urlService := service.NewShortenURLService("testing.com")
+	os.Remove(TEST_DB)
+
+	storage, err := storage.Init(context.Background(), TEST_DB)
+	if err != nil {
+		panic(fmt.Sprintf("could not initialize storage with error: %s", err.Error()))
+	}
+
+	urlService := service.NewShortenURLService("testing.com", "/tiny", storage)
 
 	grpcServer := api.NewGRPCAPIServer(fmt.Sprintf("%s:%d", DOMAIN, PORT), urlService)
 
